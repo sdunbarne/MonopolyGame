@@ -1,0 +1,760 @@
+%%% -*-LaTeX-*-
+%%% monopoly.tex.orig
+%%% Prettyprinted by texpretty lex version 0.02 [21-May-2001]
+%%% on Mon May  9 08:38:58 2022
+%%% for Steve Dunbar (sdunbar@family-desktop)
+
+\documentclass[12pt]{article}
+
+\input{../../../../etc/macros} %% \input{../../../../etc/mzlatex_macros}
+\input{../../../../etc/pdf_macros}
+
+\bibliographystyle{plain}
+
+\begin{document}
+
+\myheader \mytitle
+
+\hr
+
+\sectiontitle{The Game of Monopoly as a Markov Chain}
+
+\hr
+
+\usefirefox
+
+\hr
+
+% \visual{Study Tip}{../../../../CommonInformation/Lessons/studytip.png}
+% \section*{Study Tip}
+
+% \hr
+
+\visual{Rating}{../../../../CommonInformation/Lessons/rating.png}
+\section*{Rating} %one of
+% Everyone: contains no mathematics.
+Student:  contains scenes of mild algebra or calculus that may require
+guidance.
+% Mathematically Mature:  may contain mathematics beyond calculus with
+% proofs.  % Mathematicians Only: prolonged scenes of intense rigor.
+
+\hr
+
+\visual{Section Starter Question}{../../../../CommonInformation/Lessons/question_mark.png}
+\section*{Section Starter Question}
+
+While playing the game of Monopoly, how often do you ``take a walk on
+the Boardwalk''?  That is, what is the fraction of time spent on the
+most expensive property in the game?  How would you estimate this
+fraction?
+
+\hr
+
+\visual{Key Concepts}{../../../../CommonInformation/Lessons/keyconcepts.png}
+\section*{Key Concepts}
+
+\begin{enumerate}
+    \item
+        Modeling the game of Monopoly as a Markov chain finds the
+        stationary distribution to find the properties landed on most
+        frequently.
+    \item
+        The modeling proceeds as a sequence of increasingly detailed
+        Markov chains, each modeling more of the rules of the game.
+    \item
+        The transition probability matrix is composed as a product of
+        simpler transition matrices, each modeling a specific type of
+        moves around the board.
+\end{enumerate}
+
+\hr
+
+\visual{Vocabulary}{../../../../CommonInformation/Lessons/vocabulary.png}
+\section*{Vocabulary}
+\begin{enumerate}
+    \item
+        A \defn{circulant matrix} is a square matrix in which each row
+        vector is rotated one element to the right relative to the
+        preceding row vector.
+\end{enumerate}
+
+\hr
+
+\section*{Notation}
+\begin{enumerate}
+    \item
+        \( R \) -- the ``dice roll'' transition probability matrix for
+        the four state Monopoly
+    \item
+        \( J \) -- `Jail'' matrix represents the transition from landing
+        on the Policeman
+    \item
+        \( C \) -- four state Community Chest matrix
+    \item
+        \( Cc \) -- full game Community Chest matrix
+    \item
+        \( Ch \) -- full game Chance matrix
+    \item
+        \( P \) -- full transition probability matrix
+\end{enumerate}
+
+\visual{Mathematical Ideas}{../../../../CommonInformation/Lessons/mathematicalideas.png}
+\section*{Mathematical Ideas}
+
+This section assumes familiarity with the standard layout and rules of
+the board game Monopoly, in particular, the classic U.S.\ version based
+on Atlantic City NJ.\@ The goal is to model the game as a Markov chain
+to find the stationary distribution to determine the real estate squares
+a player token lands on most frequently.  Those squares on the board are
+``more valuable'' in the sense that other players will land on them more
+frequently and pay rent more frequently.  Deciding which color group
+squares are ``best'' is more complicated because of the variable costs
+of rent and improvement costs around the board and that aspect is not
+considered here.  The main intention of this section is to show how to
+successively make changes to a simple Markov chain to simulate a more
+nuanced model incorporating more transitions among states.  Another
+intention is to analyze a Markov chain larger than introductory Markov
+chains.
+
+\subsection*{A Simplified Four State Monopoly Game}
+
+The basic transition probability matrix around the board is simply
+determined by the rolls of two fair six-sided dice.  However making
+distant jumps due to the ``Go To Jail'' square and the drawing of
+certain \emph{Community Chest} and \emph{Chance} cards complicate the
+transition probability matrix.  To understand this complication, first
+consider a much smaller example with just \( 4 \) spaces:  Jail is state
+\( 1 \), Policeman is state \( 2 \), Community Chest is state \( 3 \),
+and Go is state \( 4 \), see Figure~%
+\ref{fig:monopoly:smallmonopoly}.  A fair two-sided ``die'' (i.e.\ a
+fair coin) determines the \( 1 \) or \( 2 \) step forward motion of a
+player token around the board.  Then the ``dice roll'' transition matrix
+\( R \) is
+\[
+    R =
+    \begin{pmatrix}
+        0 & \frac{1}{2} & \frac{1}{2} & 0 \\
+        0 & 0 & \frac{1}{2} & \frac{1}{2} \\
+        \frac{1}{2} & 0 & 0 & \frac{1}{2}\\
+        \frac{1}{2} & \frac{1}{2} & 0 & 0 \\
+    \end{pmatrix}
+    .
+\] (The source of this section,~%
+\cite{abbott97}, uses the alternative convention that \( P_{ij} \)
+represents the probability of moving \emph{to} state \( i \) \emph{from}
+state \( j \).  Thus all matrices here are the transpose of matrices in~%
+\cite{abbott97}.) This transition probability matrix is regular, and
+that the stationary distribution is \( (1/4, 1/4, 1/4, 1/4) \).
+
+\begin{figure}
+    \centering
+    \setlength{\unitlength}{1cm}
+    \begin{picture}(10,10)
+        \put(0,0){\framebox(5,5){ \parbox{5\unitlength}{%
+        \center{JAIL \\
+        State 1}}}}
+        \put(0,5){\framebox(5,5){ \parbox{5\unitlength}{%
+        \center{POLICEMAN \\
+        State 2}}}}
+        \put(5,5){\framebox(5,5){ \parbox{5\unitlength}{%
+        \center{COMMUNITY CHEST \\
+        State 3}}}}
+        \put(5,0){\framebox(5,5){ \parbox{5\unitlength}{%
+        \center{GO \\
+        State 4}}}}
+    \end{picture}
+    \caption{A Monopoly board with \( 4 \) spaces.}~%
+    \label{fig:monopoly:smallmonopoly}
+\end{figure}
+
+The ``Jail'' matrix represents the transition from landing on the
+Policeman:
+\[
+    J =
+    \begin{pmatrix}
+        1 & 0 & 0 & 0 \\
+        1 & 0 & 0 & 0 \\
+        0 & 0 & 1 & 0 \\
+        0 & 0 & 0 & 1
+    \end{pmatrix}
+    .
+\] This matrix differs from the identity matrix only in the second row (Policeman)
+where, with probability \( 1 \), a player goes directly to state \( 1 \),
+Jail.
+
+The last element is the Community Chest state.  Of the \( 16 \)
+Community Chest cards (including the Get Out of Jail Free card), \( 14 \)
+penalize or reward some peculiar accomplishment, e.g.\ \( \$10 \) for
+second prize in a beauty contest.  However, one card sends the player to
+Jail, i.e.\ state \( 1 \), and the other card advances the player to Go,
+state \( 4 \).  To form the Community Chest matrix, again start with the
+identity matrix and edit the third row to get
+\[
+    C =
+    \begin{pmatrix}
+        1 & 0 & 0 & 0 \\
+        0 & 1 & 0 & 0 \\
+        \frac{1}{16} & 0 & \frac{14}{16} & \frac{1}{16} \\
+        0 & 0 & 0 & 1
+    \end{pmatrix}
+    .
+\] The transition matrix for the simplified \( 4 \)-space board is then
+computed by the product
+\[
+    RJC =
+    \begin{pmatrix}
+        \frac{17}{32} & 0 & \frac{7}{16} & \frac{1}{32} \\
+        \frac{1}{32} & 0 & \frac{7}{16} & \frac{17}{32} \\
+        \frac{1}{2} & 0 & 0 & \frac{1}{2} \\
+        1 & 0 & 0 & 0
+    \end{pmatrix}
+    .
+\] The order of the factors reflects the process of the play:  A player
+rolls first and then follows the actions of where the token lands, i.e.\
+%
+%
+go to Jail, or draw a Community Chest card.  Now the second row of the
+matrix gives the transition probabilities for a token on the Policeman's
+square.  However, this square is never occupied, the second column of
+the product is entirely \( 0 \).  Note that the conditional
+probabilities of going from Policeman state \( 2 \) to other states are
+not \( 0 \).  In fact, those conditional probabilities are exactly what
+would be expected starting from square \( 2 \).  But the probability of
+being at the Policeman state is \( 0 \), so these correctly calculated
+probabilities are irrelevant.  In terms of Markov chain states, the Go,
+Jail, and Community Chest states are communicating and the Policeman
+state is not accessible from the other states.  Deleting the second
+column and row from the matrix gives the transitions between the
+remaining \( 3 \) occupiable states.  The stationary distribution is \(
+(\frac{16}{27}, \frac{7}{27}, \frac{4}{27}) \).  The high frequency of
+landing in Jail in this truncated game is not surprising.
+
+\subsection*{Full \( 40 \) State Monopoly Game}
+
+The states of the Markov chain representing the full game are the \( 40 \)
+spaces around the board, numbered \( 1 \) through \( 40 \) with
+Mediterranean Avenue as \( 1 \) and Go as \( 40 \).
+
+The \( 40 \times 40 \) Rolling matrix has as its first row
+\[
+    [0, 0, \frac{1}{36}, \frac{2}{36},\frac{3}{36},\frac{4}{36},\frac{5}
+    {36},\frac{6}{36}, \frac{5}{36},\frac{4}{36},\frac{3}{36},\frac{2}{36},\frac
+    {1}{36}, 0, 0, \dots, 0].
+\] The second row is a rotated version of this row, add a zero at the
+front and shift the nonzero entries one column to the right.  Form each
+succeeding row the same way until eventually the first entry is nonzero,
+as the rolls start to wrap around the board.  This creates a \defn{circulant
+matrix}%
+\index{circulant matrix}%
+, a square matrix in which each row vector is rotated one element to the
+right relative to the preceding row vector.  Considering just this
+transition probability matrix, the steady state distribution is
+uniformly \( \frac{1}{40} = 0.025 \) which is expected.
+
+For now, continue to ignore the more complicated game rules about
+exiting from the Jail square, and let the \( J \) matrix be just the
+identity matrix with the \( 1 \) in row \( 30 \), Policeman, moved from
+column \( 30 \) to column \( 10 \), Jail.
+
+The Community Chest spaces or states are \( 2 \), \( 17 \), and \( 33 \).
+Community Chest cards are most likely to give you money leaving the
+state unchanged.  But two of the cards move the player either to Jail,
+state \( 10 \) or to Go, state \( 40 \).  To form the Community Chest
+matrix, \( \mathit{Cc} \) change the \( 1 \)s on the diagonal in row \(
+30 \) of the identity matrix to \( \frac{14}{16} \) and enter \( \frac{1}
+{16} \) in each of column \( 10 \), Jail, and column \( 40 \), Go.
+
+The Chance spaces or states are \( 7 \), \( 22 \) and \( 36 \).  A
+Chance card is more likely than a Community Chest card to move players, \(
+10 \) of the \( 16 \) cards directing a player to a different state. The
+existence of cards such as ``Go back three spaces'' and ``Advance to the
+nearest railroad'' means the transitions depend on which Chance a player
+lands on.  The Chance matrix \( \mathit{Ch} \) differs from the identity
+in rows \( 7 \), \( 22 \) and \( 36 \).  It makes sense to multiply the
+Community Chest matrix \emph{after} the Chance matrix, since there is a
+probability \( \frac{1}{16} \) of moving from Chance state \( 36 \) to
+Community Chest state \( 33 \) and thence to Go or Jail, each with
+probability \( \frac{1}{16} \).
+
+Finally, the full transition probability matrix is \( P = R J \mathit{Ch}
+\mathit{Cc} \).  The steady state distribution gives a preliminary look
+at the proportion of time a player spends in each state over the course
+of a long game.  The steady state distribution as a bar graph is in
+Figure~%
+\ref{fig:monopoly:monopoly40}.  Table~%
+\ref{tab:monopoly:freq40} summarizes the results with the \( 14 \) most
+frequently visited states in this model.  The R script to generate the
+first two columns of Table~%
+\ref{tab:monopoly:freq40} from the steady state distribution (eigenvector)
+of the transition probability matrix is in the Scripts section below.
+The last two columns come from a simulation with \( 10^6 \) steps.  All
+states except \( 30 \) are communicating and the Policeman state \( 30 \)
+is not accessible from the other states.  The frequencies computed here
+are essentially the same as the corresponding table in~%
+\cite{abbott97}, with differences due to the number of significant
+digits reported.  Furthermore, the decreasing order of eigenvalue
+frequencies differs from the order of simulated frequencies in only \( 2
+\) states, with a transpositions of states \( 21 \) and \( 28 \).  This
+gives confidence to the eigenvector and the simulation values and also
+indicates the number of steps necessary to get good agreement with the
+theoretical values.
+
+\begin{table}
+    \centering
+    \begin{tabular}{rrrrrrr}
+           &       &            & Abbott & Abbott    & Simulation & Simulation \\ 
+           & State & Frequency  & State  & Frequency & State      &            \\ 
+        1  & 10    & 0.05896420 & 10     & 0.05896   & 10         & 0.058909   \\ 
+        2  & 24    & 0.03187795 & 24     & 0.03188   & 24         & 0.031934   \\ 
+        3  & 40    & 0.03113803 & 40     & 0.03114   & 40         & 0.031183   \\ 
+        4  & 19    & 0.03071024 & 19     & 0.03071   & 19         & 0.030969   \\ 
+        5  & 25    & 0.03063697 & 25     & 0.03064   & 25         & 0.030858   \\ 
+        6  & 5     & 0.02993127 & 5      & 0.02993   & 5          & 0.029701   \\ 
+        7  & 15    & 0.02918612 & 15     & 0.02919   & 15         & 0.029198   \\ 
+        8  & 18    & 0.02916517 & 18     & 0.02917   & 18         & 0.029070   \\ 
+        9  & 20    & 0.02874826 & 20     & 0.02875   & 20         & 0.028704   \\ 
+        10 & 21    & 0.02830354 & 21     & 0.02830   & 28         & 0.028230   \\ 
+        11 & 28    & 0.02810737 & 28     & 0.02811   & 21         & 0.028152   \\ 
+        12 & 16    & 0.02776751 & 16     & 0.02777   & 16         & 0.028065   \\ 
+        13 & 23    & 0.02738577 & 23     & 0.02739   & 23         & 0.027349   \\ 
+        14 & 11    & 0.02735991 & 11     & 0.02736   & 11         & 0.027226   \\ 
+    \end{tabular}
+    \caption{The \( 14 \) most-frequently visited states in the simple \(
+    40 \)-state model.}~%
+    \label{tab:monopoly:freq40}
+\end{table}
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.50]{monopoly40}
+    \caption{Steady state distribution for the first \( 40 \)-state
+    model of Monopoly.}~%
+    \label{fig:monopoly:monopoly40}
+\end{figure}
+
+\subsection*{Modeling Rules for Jail}
+
+This first model and simulation ignores two finer aspects of the game.
+This model assumes a player sent to Jail immediately pays the \( \$50 \)
+fine or uses a Get Out of Jail card to exit Jail on the next roll.  But
+late in a game, when the board is covered with hotels and houses with
+high rent, players may choose to stay in Jail for a couple of turns to
+avoid paying rents.  The rules allow this for two turns unless doubles
+are rolled, in which case a player must leave, exposed to nearby high
+rents.  Because one must leave Jail on the third roll, the model now
+needs a record of how many unsuccessful rolls of doubles have occurred.
+The solution is to define two new Jail states, one for being newly
+Jailed, now state \( 41 \) and the other for having failed at doubles
+exactly once, state \( 42 \).  This is a small example of a general
+principle of turning a process which is not Markov into a Markov chain
+by adding states, for a general discussion, see~%
+\cite{Stroock2016}.  The original Jail state \( 10 \) serves as both the
+Just-Visiting and twice-failed-rolling-doubles states, since in both
+cases, the player leaves on the next turn.
+
+Table~%
+\ref{tab:monopoly:freq42} gives the results of one simulation with \( 10^6
+\) steps of this expanded Markov chain with the Jail states \( 10 \), \(
+41 \) and \( 42 \) combined.  State \( 10 \) now is a state reached by
+either a roll of the dice or by aging out of Jail so a player can move
+on to other states.  The steady state distribution of this expanded
+Markov chain as a bar graph is in Figure~%
+\ref{fig:monopoly:monopoly42}, also with the Jail states \( 10 \), \( 41
+\), and \( 42 \) combined.
+
+\begin{table}
+    \centering
+    \begin{tabular}{rrrrrrr}
+           &       &            & Abbott & Abbott    & Simulation & Simulation \\ 
+           & State & Frequency  & State  & Frequency & State      &            \\ 
+        1  & Jail  & 0.10799193 & Jail   & 0.10800   & Jail       & 0.108605   \\ 
+        2  & 24    & 0.03012586 & 24     & 0.03013   & 24         & 0.030191   \\ 
+        3  & 40    & 0.02948697 & 40     & 0.02949   & 40         & 0.029409   \\ 
+        4  & 25    & 0.02905414 & 25     & 0.02905   & 25         & 0.029237   \\ 
+        5  & 5     & 0.02845183 & 5      & 0.02845   & 19         & 0.028443   \\ 
+        6  & 20    & 0.02821648 & 20     & 0.02822   & 5          & 0.028404   \\ 
+        7  & 19    & 0.02821330 & 19     & 0.02821   & 20         & 0.028175   \\ 
+        8  & 18    & 0.02811892 & 18     & 0.02812   & 18         & 0.028076   \\ 
+        9  & 16    & 0.02674112 & 16     & 0.02674   & 28         & 0.026648   \\ 
+        10 & 28    & 0.02669419 & 28     & 0.02669   & 16         & 0.026637   \\ 
+        11 & 15    & 0.02658757 & 15     & 0.02659   & 15         & 0.026344   \\ 
+        12 & 12    & 0.02636156 & 12     & 0.02636   & 12         & 0.026183   \\ 
+        13 & 21    & 0.02627735 & 21     & 0.02628   & 21         & 0.026183   \\ 
+        14 & 11    & 0.02602722 & 11     & 0.02603   & 11         & 0.026039   \\ 
+    \end{tabular}
+    \caption{The \( 14 \) most-frequently visited states in the \( 42 \)
+    state model with Jail states \( 10 \), \( 41 \) and \( 42 \)
+    combined.}~%
+    \label{tab:monopoly:freq42}
+\end{table}
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.50]{monopoly42}
+    \caption{Steady state distribution for the expanded \( 42 \)-state
+    model of Monopoly with Jail states \( 10 \), \( 41 \) and \( 42 \)
+    combined.}~%
+    \label{fig:monopoly:monopoly42}
+\end{figure}
+
+The specific order of most frequently visited states is not as important
+as it appears in Table~%
+\ref{tab:monopoly:freq42}, since differences in frequency generally
+appear in the fourth significant digit.  More useful is to consider
+\emph{sets of most frequently visited states}.  The most frequently
+visited set of states is \( 10 \), \( 41 \), \( 42 \), \( 24 \) and \(
+40 \).
+
+There is still one more detailed rule to consider, any player who rolls
+three doubles in a row goes to Jail.  One way to handle this detail is
+to add \( 80 \) new states to the model as before, keeping track of
+history in a model with a total of \( 122 \) states.  Again this
+illustrates the principle of turning a process which is not Markov into
+a Markov chain by adding states.  An alternative way to handle this is
+to make an approximation by adjusting the Jail matrix \( J \) so that it
+sends a player not already in Jail to Jail with probability \( 1/216 \)
+since the probability of rolling three doubles in a row is \( \frac{1}{216}
+\).  Replace each \( 1 \) on the diagonal with \( \frac{215}{216} \) and
+add \( \frac{1}{216} \) to column \( 41 \).  After making these last
+adjustments to the probability transition matrix, Table~%
+\ref{tab:monopoly:finalmonopoly} summarizes the results of simulation.
+The steady state distribution for this final Markov chain model as a bar
+graph is in Figure~%
+\ref{fig:monopoly:finalmonopoly}.
+
+\begin{table}
+    \centering
+    \begin{tabular}{rrr}
+           & State & Frequency   \\ 
+        1  & 10    & 0.117841272 \\ 
+        2  & 24    & 0.029795914 \\ 
+        3  & 40    & 0.029055135 \\ 
+        4  & 18    & 0.028235759 \\ 
+        5  & 20    & 0.028148582 \\ 
+        6  & 19    & 0.028019441 \\ 
+        7  & 25    & 0.027108791 \\ 
+        8  & 16    & 0.026894000 \\ 
+        9  & 5     & 0.026694388 \\ 
+        10 & 28    & 0.026549407 \\ 
+        11 & 12    & 0.026091348 \\ 
+        12 & 21    & 0.025963983 \\ 
+        13 & 11    & 0.025481659 \\ 
+        14 & 23    & 0.025471064 \\ 
+        15 & 26    & 0.025384224 \\ 
+        16 & 27    & 0.025192088 \\ 
+        17 & 31    & 0.025076589 \\ 
+        18 & 15    & 0.025064206 \\ 
+        19 & 39    & 0.024766786 \\ 
+        20 & 32    & 0.024499247 \\ 
+        21 & 29    & 0.024398944 \\ 
+        22 & 14    & 0.024354843 \\ 
+        23 & 34    & 0.023334506 \\ 
+        24 & 17    & 0.022984619 \\ 
+        25 & 35    & 0.022713579 \\ 
+        26 & 33    & 0.022086039 \\ 
+        27 & 4     & 0.021986015 \\ 
+        28 & 8     & 0.021786854 \\ 
+        29 & 13    & 0.021756287 \\ 
+        30 & 9     & 0.021606785 \\ 
+        31 & 6     & 0.021335917 \\ 
+        32 & 37    & 0.020478819 \\ 
+        33 & 3     & 0.020476878 \\ 
+        34 & 38    & 0.020438135 \\ 
+        35 & 1     & 0.020087639 \\ 
+        36 & 2     & 0.017758354 \\ 
+        37 & 22    & 0.012115464 \\ 
+        38 & 7     & 0.009514394 \\ 
+        39 & 36    & 0.009452046 \\ 
+        40 & 30    & 0.000000000 \\ 
+    \end{tabular}
+    \caption{The frequency of visited states in the final \( 42 \)-state
+    model with the approximation for going to Jail by rolling three
+    doubles.}~%
+    \label{tab:monopoly:finalmonopoly}
+\end{table}
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.50]{finalmonopoly}
+    \caption{Steady state distribution for the final \( 42 \)-state
+    model of Monopoly.}~%
+    \label{fig:monopoly:finalmonopoly}
+\end{figure}
+
+\subsection*{Additional Modeling Considerations} A few modeling
+assumptions are not explicitly considered in this model.  One assumption
+is that Community Chest and Chance card decks are shuffled after each
+draw so that drawing the cards is a random event, possibly even
+repeating.  The game actually has \( 17 \) Community Chest cards
+including a ``Get Out of Jail Free'' card, which can be saved by the
+player who draws it.  Assuming that card has been drawn and retained
+gives the denominator of \( 16 \) used in the probabilities of the
+Community Chest matrix.  Likewise, Monopoly uses \( 16 \) Chance cards
+but one is another ``Get Out of Jail Free'' card which can be saved.
+Assuming that card is still in the Chance deck gives the denominator of \(
+16 \) used in the probabilities of the Chance matrix.  This pair of
+mixed assumptions makes uniform denominators in the two matrices.  Also,
+the final model assumes that appearance of a third consecutive roll of
+doubles is equally likely to occur at any space on the board, which is
+not strictly correct.  Some squares are already known to be visited more
+than others and a third consecutive doubles could occur at an even
+number of squares further on the board from where the doubles run began.
+
+In~%
+\cite{abbott97}, Abbott and Richey use the steady state distribution to
+find the expected rental value and break-even times of the various color
+group properties.  However, since illustration of the modeling and
+simulation of large Markov chains is the focus of these notes, these
+notes do not follow that investigation.
+
+Many sites on the Internet make essentially the same Markov chain
+analysis of Monopoly in varying degrees of detail and in slightly
+different ways.  For example, some use a \( 120 \)-state chain to model
+the ``rolling doubles'' rule, and then condense the chain to the \( 40 \)
+board states.  All reach essentially the same conclusions.  Many of
+those sites go further and make an expected Return on Investment
+analysis to determine the most valuable spaces on the board, not just
+the most frequently visited.  The Return on Investment analysis is not
+pursued here because the intention is to illustrate the Markov chain
+aspects.
+
+\visual{Section Starter Question}{../../../../CommonInformation/Lessons/question_mark.png}
+\section*{Section Ending Answer}
+
+Since the board has \( 40 \) spaces, a first guess is that a token
+spends about \( 1/40 = 0.025 \) of the time on Boardwalk.  In fact,
+using the most detailed Markov chain here, \( 0.02431 \) of the time is
+spent at Boardwalk.  It is less than the easy estimate because the model
+shows that a much larger fraction of time is spent in Jail, and in fact,
+not all spaces are equally likely to be occupied.
+
+\subsection*{Sources}
+
+The subsection on Monopoly as a Markov chain is based on~%
+\cite{abbott97} with more information from~%
+\cite{ash72}.  Matthew Sheby pointed out an error in the Chance
+probability matrix in the scripts, now corrected so the steady state
+calculations agree with
+\cite{abbott97}.  The simulation script is adapted from \booktitle{Efficient
+R}, Chapter 7 by Colin Gillespie and Robin Lovelace.
+
+\hr
+
+\visual{Algorithms, Scripts, Simulations}{../../../../CommonInformation/Lessons/computer.png}
+\section*{Algorithms, Scripts, Simulations}
+
+\subsection*{Algorithm}
+\begin{algorithm}[H]
+  \DontPrintSemicolon
+  \KwData{States and basic transition probabilities}
+  \KwResult{Steady state distribution for Monopoly game}
+  \BlankLine
+  \SetKwFunction{Frotvec}{rotvec}
+  
+  \SetKwProg{rot}{function}{}{}
+  \rot{\Frotvec($v$)}{}{
+    Cyclically rotate vector elements one place to right\;
+    \Return rotated vector\;}
+
+  \BlankLine
+    
+  \emph{Inititialization of Matrices}\;
+  Load Markov Chain library\;
+  Set number of states and state names\;
+  Fill diceRoll matrix using \Frotvec\;
+  Fill diagonal Jail matrix with move from Police to Jail\;
+  Fill diagonal Community Chest matrix with moves to other states\;
+  Fill diagonal Chance matrix with moves to other states\;
+  Transition probability matrix as product of diceRoll, Jail, Chance
+  and Community Chest\;
+\emph{Markov chain calculations}\;
+  Create Monopoly Markov chain object\;
+  Find steady state distribution of Monopoly Markov chain\;
+  \KwRet{Selected results in table or graph}
+  \caption{Monopoly Game Markov Chain}
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \DontPrintSemicolon
+  \SetKwFunction{FmoveSquare}{moveSquare}
+  \SetKwFunction{FcheckSquare}{checkSquare}
+  \SetKwFunction{FupdateStateVector}{updateStateVector}
+  \SetKwFunction{FcommunityChest}{communityChest}
+  \SetKwFunction{Fchance}{chance}
+  \SetKwFunction{FmySimulateMonopoly}{mySimulateMonopoly}
+  \KwData{Number of directly simulated Monopoly games}
+  \KwResult{Empirical stationary distributions from simulations}
+
+  \SetKwProg{mS}{function}{}{}
+    \mS{\FmoveSquare($c, J$)}{}{
+      Simulate roll of $2$ dice and\;
+      keep track of jail time\;
+      \Return new state $c$ and jail time $J$\;}
+  \SetKwProg{cS}{function}{}{}
+  \cS{\FcheckSquare($c$)}{}{
+    Cyclically reduce state about state 40\;
+    \Return state number\;}
+  \SetKwProg{uSV}{function}{}{}
+  \uSV{\FupdateStateVector($c, J, l$)}{}{
+  Keep track of number of times a state is visited\;
+  \Return updated landings $l$\;}
+  \SetKwProg{cC}{function}{}{}
+  \cC{\FcommunityChest($c, J$)}{}{
+  Move state according to random selection\;
+  of Community Chest card\;
+  \Return new state $c$ and jail time $J$ \;}
+  \SetKwProg{cH}{function}{}{}
+  \cH{\Fchance($c, J$)}{}{
+  Move state according to random selection of Chance card\;
+  \Return new state $c$ and jail time $J$\;}
+  \SetKwProg{mSM}{main}{}{}
+  \mSM{\FmySimulateMonopoly($n$)}{}{ 
+  Initialize landings vector to hold occupancy of states\;
+  Initialize jail time $J$\;
+  Initialize first state at Go\;
+  \For{$i = 1$  to numberOfTurns}{
+  Move by \FmoveSquare\;
+  \If{Chance square}{move by \Fchance}
+  \If{Community Chest square}{move by \FcommunityChest}
+  Update landings\;}}
+  Set number of simulations $n$\;
+  Run \FmySimulateMonopoly $n$ times,  divide by $n$\;
+  \KwRet{Relative Frequency of States from simulation}
+  \caption{Simulation of Monopoly game}
+\end{algorithm}
+\subsection*{Scripts}
+
+\input{monopoly_scripts}
+
+\hr
+
+\visual{Problems to Work}{../../../../CommonInformation/Lessons/solveproblems.png}
+\section*{Problems to Work for Understanding}
+\renewcommand{\theexerciseseries}{}
+\renewcommand{\theexercise}{\arabic{exercise}}
+
+\begin{exercise}
+    Create a small Monopoly game with just \( 8 \) spaces:
+    \begin{enumerate}
+        \item
+            Reading Railroad is state \( 1 \),
+        \item
+            Jail is state \( 2 \),
+        \item
+            Pennsylvania Railroad is state \( 3 \),
+        \item
+            Policeman is state \( 4 \),
+        \item
+            B.\ \& O.\ Railroad is state \( 5 \),
+        \item
+            Chance is state \( 6 \),
+        \item
+            Short Line is state \( 7 \) and
+        \item
+            Go is state \( 8 \).
+    \end{enumerate}
+    A fair two-sided ``die'' (i.e.\ a fair coin) determines the \( 1 \)
+    or \( 2 \) step forward motion of a player token around the board.
+    Considering this as a Markov Chain, find the stationary
+    distribution.  Assume the simple rule that a player leaves Jail
+    immediately, no staying for \( 2 \) more turns.  Be sure to include
+    the effect drawing an ``Advance to the Nearest Railroad'', ``Take a
+    Ride on the Reading'', ``Go to Jail'', ``Advance to Go'', or ``Go
+    back \( 3 \) spaces'' card from the Chance deck.  All other Chance
+    movement cards (e.g. Illinois Avenue, Boardwalk, Utility) have no
+    effect on movement.
+\end{exercise}
+\begin{solution}
+    Use the following script:
+\begin{lstlisting}
+    library("markovchain")
+
+rotvec <- function(vec) vec[ c(length(vec), 1:(length(vec)-1)) ]
+
+nStates <- 8
+monopolyStates <- as.character( c(1:nStates) )
+
+diceRoll <- matrix(0, nStates, nStates)
+p1 <- c(0, 1/2, 1/2, 0, 0, 0, 0, 0)
+
+for (i in 1:nStates) {
+    diceRoll[i, ] <- p1
+    p1 <- rotvec(p1)
+}
+
+Jail <- diag(nStates)
+Jail[4, 4] <- 0
+Jail[4, 2] <- 1                       #go from Police to Jail
+
+Ch <- diag(nStates)
+Ch[6, 7] <- 1/16                         #Nearest Railroad
+Ch[6, 8] <- 1/16                         #Advance to Go
+Ch[6, 1] <- 1/16                         #Reading Railroad
+Ch[6, 2] <- 1/16                         #Go to Jail
+Ch[6, 3] <- 1/16                         #Go back 3
+Ch[6, 6] <- 11/16                         #All other cards
+
+monopMat <- diceRoll %*% Jail %*% Ch
+
+mcMonopoly8 <- new("markovchain", states = monopolyStates, byrow = TRUE,
+                  transitionMatrix = monopMat, name = "Monopoly")
+ss <- steadyStates(mcMonopoly8)
+cat(ss, "\n")
+\end{lstlisting}
+
+    The steady state distribution is \begin{tabular}{rr}
+        1  & 0.07731016 \\ 
+        2  & 0.383806   \\ 
+        3  & 0.2342177  \\ 
+        4  & 0.0        \\ 
+        5  & 0.1171089  \\ 
+        6  & 0.04025618 \\ 
+        7  & 0.08234218 \\ 
+        8  & 0.06495883 \\ 
+    \end{tabular}
+\end{solution}
+
+\hr
+
+\visual{Books}{../../../../CommonInformation/Lessons/books.png}
+\section*{Reading Suggestion:}
+
+\bibliography{../../../../CommonInformation/bibliography}
+
+%   \begin{enumerate}
+%     \item
+%     \item
+%     \item
+%   \end{enumerate}
+
+\hr
+
+\visual{Links}{../../../../CommonInformation/Lessons/chainlink.png}
+\section*{Outside Readings and Links:}
+\begin{enumerate}
+    \item
+    \item
+    \item
+    \item
+\end{enumerate}
+
+\section*{\solutionsname} \loadSolutions
+
+\hr
+
+\mydisclaim \myfooter
+
+Last modified:  \flastmod
+
+\end{document}
+
+File name :  monopoly.tex Number of characters :  29150 Number of words :
+3318 Percent of complex words :  18.08 Average syllables per word :
+1.7384 Number of sentences :  247 Average words per sentence :  13.4332
+Number of text lines :  625 Number of blank lines :  93 Number of
+paragraphs :  92
+
+READABILITY INDICES
+
+Fog :  12.6066 Flesch :  46.1319 Flesch-Kincaid :  10.1620
+
